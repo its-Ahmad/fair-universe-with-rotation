@@ -80,6 +80,29 @@ class Translation(Systematics):
 
 
 #================================
+# Rotation 
+#================================
+class Rotation(Systematics):
+    def __init__(self, systematics):
+
+        super().__init__(
+            name = systematics["name"],
+            allowed_dimension = systematics["allowed_dimension"]
+        )
+        self.rotation_degree = systematics["rotation_degree"]*np.pi/180  # In degrees
+        self.rotation_matrix = np.array([ [np.cos(self.rotation_degree) , -np.sin(self.rotation_degree)], [np.sin(self.rotation_degree), np.cos(self.rotation_degree)] ])
+        
+
+    def apply_systematics(self, problem_dimension, points):
+        
+        #if len(self.rotation_vector) != problem_dimension:
+        #    self.logger.error("rotation_vector has invalid dimension!")
+        #    exit()
+        return (np.matmul(self.rotation_matrix, points.T).T)
+
+
+
+#================================
 # Scaling 
 #================================
 class Scaling(Systematics):

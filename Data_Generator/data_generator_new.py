@@ -15,12 +15,13 @@ from sklearn.utils import shuffle
 # Internal Imports
 #================================
 from distributions import Gaussian
-from systematics import Translation,Scaling
+from systematics import Translation, Rotation, Scaling
 from logger import Logger
 from checker import Checker
 from constants import (
     DISTRIBUTION_GAUSSIAN, 
     SYSTEMATIC_TRANSLATION,
+    SYSTEMATIC_ROTATION,
     SYSTEMATIC_SCALING,
     SIGNAL_LABEL,
     BACKGROUND_LABEL,
@@ -45,7 +46,8 @@ class DataGenerator:
         #-----------------------------------------------
         self.settings = None
         self.params_distributions = {} 
-        self.params_systematics_translation = None 
+        self.params_systematics_translation = None
+        self.params_systematics_rotation = None
         self.params_systematics_scaling = None 
 
 
@@ -158,6 +160,8 @@ class DataGenerator:
         self.box_l = self.settings["box_l"]
 
         scaling_factor = self.settings["scaling_factor"]
+        rotation_degree = self.settings["rotation_degree"]
+
         z_magnitude = self.settings["z_magnitude"]
         alpha = self.settings["alpha"]
         z = np.multiply([round(cos(radians(alpha)) ,2), round(sin(radians(alpha)), 2)], z_magnitude)
@@ -168,6 +172,14 @@ class DataGenerator:
             "translation_vector" : z
 
         })
+
+        self.params_systematics_rotation = Rotation({
+            "name" : SYSTEMATIC_ROTATION,
+            "allowed_dimension" : -1,
+            "rotation_degree" : rotation_degree #[rotation_degree,rotation_degree]
+
+        })
+
         if scaling_factor > 1:
             self.params_systematics_scaling = Scaling({
             "name" : SYSTEMATIC_SCALING,
@@ -193,7 +205,7 @@ class DataGenerator:
         if self.checker.systematics_are_not_loaded(self.params_systematics_translation):
             self.logger.error("Systematics are not loaded. First call `load_systematics` function!")
             exit()
-
+        ############################################## To check up later #################################################33
 
         # column names
         columns = ["x{}".format(i+1) for i in range(0, self.settings["problem_dimension"])]
@@ -217,9 +229,14 @@ class DataGenerator:
         # Apply Systematics
         #-----------------------------------------------
 
+        ## Rotation
+        biased_signal_data = self.params_systematics_rotation.apply_systematics(self.problem_dimension, signal_data)
+        biased_background_data = self.params_systematics_rotation.apply_systematics(self.problem_dimension, background_data)
+        self.logger.success("Rotation Applied!")
+        
         ## Translation
-        biased_signal_data = self.params_systematics_translation.apply_systematics(self.problem_dimension, signal_data)
-        biased_background_data = self.params_systematics_translation.apply_systematics(self.problem_dimension, background_data)
+        biased_signal_data = self.params_systematics_translation.apply_systematics(self.problem_dimension, biased_signal_data)
+        biased_background_data = self.params_systematics_translation.apply_systematics(self.problem_dimension, biased_background_data)
         self.logger.success("Translation Applied!")
 
         if self.params_systematics_scaling is not None:
