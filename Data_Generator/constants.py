@@ -11,6 +11,7 @@ DISTRIBUTION_POISSON = "Poisson"
 #-----------------------------------------------
 SYSTEMATIC_BEN_NEW = "Ben_New"
 SYSTEMATIC_TRANSLATION = "Translation"
+SYSTEMATIC_ROTATION = "Rotation"
 SYSTEMATIC_SCALING = "Scaling"
 
 
