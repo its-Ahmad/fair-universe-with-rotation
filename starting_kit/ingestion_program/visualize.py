@@ -4,7 +4,34 @@ import matplotlib.patches as patches
 from math import cos,sin,radians
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from sklearn.metrics import roc_curve
+from matplotlib.patches import Arc, RegularPolygon
+from numpy import radians as rad
 
+
+
+def drawCirc(ax, radius,centX,centY,angle_,theta2_,color_='black', label_=None):
+    #========Line
+    arc = Arc([centX,centY],radius,radius,angle=angle_,
+          theta1=0,theta2=theta2_,capstyle='round',linestyle='-',lw=2,color=color_)
+    ax.add_patch(arc)
+
+
+    #========Create the arrow head
+    endX=centX+(radius/2)*np.cos(rad(theta2_+angle_)) #Do trig to determine end position
+    endY=centY+(radius/2)*np.sin(rad(theta2_+angle_))
+
+    ax.add_patch(                    #Create triangle as arrow head
+        RegularPolygon(
+            (endX, endY),            # (x,y)
+            3,                       # number of vertices
+            radius/20,                # radius
+            rad(angle_+theta2_),     # orientation
+            color=color_,
+            label=label_
+        )
+    )
+    #ax.set_xlim([centX-radius,centY+radius]) and ax.set_ylim([centY-radius,centY+radius]) 
+    # Make sure you keep the axes scaled or else arrow will distort
 
 
 def get_params(setting):
@@ -19,6 +46,8 @@ def get_params(setting):
     z = np.multiply([round(cos(radians(alpha)) ,2), round(sin(radians(alpha)), 2)], z_magnitude)
 
     scaling_factor = setting["scaling_factor"]
+    rotation_degree = setting["rotation_degree"]
+    theta = setting["theta"]
     case = setting["case"]
 
     box_center = sg_mu#setting["box_center"]
@@ -27,7 +56,7 @@ def get_params(setting):
     train_comment = setting["train_comment"]
     test_comment = setting["test_comment"]
 
-    return case, bg_mu, sg_mu, z, scaling_factor, train_comment, test_comment, box_center, box_l
+    return case, bg_mu, sg_mu, z, scaling_factor, rotation_degree, theta, train_comment, test_comment, box_center, box_l
 
 
 def visulaize_box(ax, box_center, box_l):
@@ -49,7 +78,7 @@ def visulaize_box(ax, box_center, box_l):
 
 def visualize_clock(ax, setting):
 
-    case, bg_mu, sg_mu, z, sf, _, _, _, _ = get_params(setting)
+    case, bg_mu, sg_mu, z, sf, rd, theta, _, _, _, _ = get_params(setting)
 
     ax.set_xlim([-8,8])
     ax.set_ylim([-8,8])
@@ -67,6 +96,8 @@ def visualize_clock(ax, setting):
     ax.plot([b_c[0], s_c[0]], [b_c[1], s_c[1]], linestyle='-.', color="k", label="separation direction")
     ax.plot(s_c[0], s_c[1], 'ro', )
     ax.plot([b_c[0]-0.25, z_c[0]-0.25], [b_c[1]-0.25, z_c[1]-0.25], linestyle='-.', color="r", label="translation_direction")
+    drawCirc(ax, 3, b_c[0], b_c[1], angle_= theta, theta2_= rd, color_='green', label_="rotation_direction")
+
     ax.set_xticks([])
     ax.set_yticks([])
     ax.legend()
@@ -74,7 +105,7 @@ def visualize_clock(ax, setting):
 
 def visualize_train(ax, settings, train_set, comment=True, xy_limit=None):
 
-    _, bg_mu, sg_mu, _, _, train_comment, _, box_center, box_l = get_params(settings)
+    _, bg_mu, sg_mu, _, _, rd, theta, train_comment, _, box_center, box_l = get_params(settings)
 
 
     visulaize_box(ax, box_center, box_l)
@@ -107,7 +138,7 @@ def visualize_train(ax, settings, train_set, comment=True, xy_limit=None):
 
 def visualize_augmented(ax, settings, train_set, comment=True, xy_limit=None):
 
-    _, bg_mu, sg_mu, _, _, train_comment, _, _, _ = get_params(settings)
+    _, bg_mu, sg_mu, _, _, rd, theta, train_comment, _, _, _ = get_params(settings)
 
     limit = [-8,8]
     if xy_limit is not None:
@@ -135,7 +166,7 @@ def visualize_augmented(ax, settings, train_set, comment=True, xy_limit=None):
 
 def visualize_test(ax, settings, test_set):
 
-    _, bg_mu, sg_mu, z, sf, _, test_comment, box_center, box_l = get_params(settings)
+    _, bg_mu, sg_mu, z, sf, rd, theta, _, test_comment, box_center, box_l = get_params(settings)
 
     visulaize_box(ax, box_center, box_l)
 
@@ -152,7 +183,10 @@ def visualize_test(ax, settings, test_set):
     else:
         bg_c = [bg_mu[0]+z[0], bg_mu[1]+z[1]]
         sg_c = [sg_mu[0]+z[0], sg_mu[1]+z[1]]
-
+    
+    ############################################### Replaces the previous ###############################################
+    bg_c = np.mean(test_set["data"][background_mask])
+    sg_c = np.mean(test_set["data"][signal_mask])
 
 
 
@@ -365,7 +399,7 @@ def visualize_roc_curves(name, result, settings, Y_trains, Y_tests):
     for index, _ in enumerate(result["trained_models"]):
 
 
-        case, _, _, _, _, _, _, _, _ = get_params(settings[index])
+        case, _, _, _, _, _, _, _, _, _, _ = get_params(settings[index])
 
         
 
