@@ -30,8 +30,6 @@ def drawCirc(ax, radius,centX,centY,angle_,theta2_,color_='black', label_=None):
             label=label_
         )
     )
-    #ax.set_xlim([centX-radius,centY+radius]) and ax.set_ylim([centY-radius,centY+radius]) 
-    # Make sure you keep the axes scaled or else arrow will distort
 
 
 def get_params(setting):
